@@ -2,19 +2,19 @@
 import requests
 import json
 import subprocess
-import time
-import re,sys,string
+#import time    TESTING PURPOSE
+import re,string
 import textwrap
 import os
 import dbus
 import urllib
 import dbus
-import sys
+#import sys     TESTING PURPOSE
 bus = dbus.SessionBus()
 helloservice = bus.get_object('org.gnome.Shell', '/com/bear/queryInPanel')
 hello = helloservice.get_dbus_method('setText', 'com.bear.queryInPanel')
 changeColor = helloservice.get_dbus_method('changeColor', 'com.bear.queryInPanel')
-#print hello(str(" ".join(sys.argv[1:])))
+#print hello(str(" ".join(sys.argv[1:])))  TESTING PURPOSE 
 
 
 voice_to_text = ""
@@ -37,12 +37,12 @@ def notify(title):
         dict = {'image-path':icon_location}
         interface.Notify('Siri',12,icon_location,"Bear",title,'',dict,-1)
 
-def Send_to_Clipboard(top_title,Content):
-        Cstart = time.clock()
+def send_to_extension(top_title,Content):
+        #Cstart = time.clock()
         popup = textwrap.fill(Content,180)
-        Cstop = time.clock()
-        Cinterval = Cstop - Cstart
-        print " textwrap time :" + str(Cinterval)
+        #Cstop = time.clock()
+        #Cinterval = Cstop - Cstart
+        #print " textwrap time :" + str(Cinterval)
         if(len(popup) > 60):
             reply = "\n";
             reply += popup;
@@ -116,11 +116,11 @@ def api_ai_call(text):
         
     else:
         reply += api_ai_json_response["result"]["fulfillment"]["speech"]
-    #reply = reply.encode('ascii','ignore')
-    print "=======================What goes \|/"
+    #reply = reply.encode('ascii','ignore')   TESTING PURPOSE
+    print "=======================REPLY==================="
     print reply.encode('utf8')
     changeColor()
-    Send_to_Clipboard(searched_term,reply)
+    send_to_extension(searched_term,reply)
     
 
     
@@ -130,10 +130,10 @@ if  __name__ == '__main__' :
     if voice_text == 0:
         notify("I couldn't hear you! Try again")
         exit()
-    #voice_text = string.join(sys.argv[1:])
+    #voice_text = string.join(sys.argv[1:]) TESTING PURPOSE
     voice_text += "   "
     changeColor()    
     hello(voice_text)
     api_ai_call(voice_text)
     
-    ##api_ai_call(sys.argv[1:])
+    ##api_ai_call(sys.argv[1:]) TESTING PURPOSE
