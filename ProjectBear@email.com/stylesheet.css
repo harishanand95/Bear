@@ -1,0 +1,24 @@
+.label {
+	max-width:180px;
+    font-weight: bold;
+    color: #000000;
+	font-size: 20px;
+    background-color: #f1f1f1;
+    }
+.opaque {
+    background-color: rgba(0,0,0,0.4);   
+}
+.icon {
+    
+    background-image: url("icons/m2.png");
+}
+.corner
+{
+    background-color: #5294DA;
+	width: 30px;
+	height: 30px;
+	border-radius: 30px;
+}
+.panels-text{
+color: #3498db;
+}

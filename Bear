@@ -1,0 +1,139 @@
+#!/usr/bin/python
+import requests
+import json
+import subprocess
+import time
+import re,sys,string
+import textwrap
+import os
+import dbus
+import urllib
+import dbus
+import sys
+bus = dbus.SessionBus()
+helloservice = bus.get_object('org.gnome.Shell', '/com/bear/queryInPanel')
+hello = helloservice.get_dbus_method('setText', 'com.bear.queryInPanel')
+changeColor = helloservice.get_dbus_method('changeColor', 'com.bear.queryInPanel')
+#print hello(str(" ".join(sys.argv[1:])))
+
+
+voice_to_text = ""
+def Report_to_admin(subject,content):
+    return requests.post(
+        "https://api.mailgun.net/v3/sandbox993e74db4dc649acb4e25e2f62e1f384.mailgun.org/messages",
+        auth=("api", "key-0c4b2144b9585be0660a2ff2de1647f1"),
+        data={"from": "Excited User <mailgun@sandbox993e74db4dc649acb4e25e2f62e1f384.mailgun.org>",
+              "to": ["harishanand95@gmail.com"],
+              "subject": subject,
+              "text": content})
+
+def notify(title):
+        location = os.getcwd()    
+        bus = dbus.SessionBus()
+        notifications = bus.get_object('org.freedesktop.Notifications', '/org/freedesktop/Notifications')
+        interface = dbus.Interface(notifications, 'org.freedesktop.Notifications')
+        urllib.urlretrieve("https://www.iconfinder.com/icons/204392/download/png/128", "Bear.png")
+        icon_location = location + "/Bear.png"
+        dict = {'image-path':icon_location}
+        interface.Notify('Siri',12,icon_location,"Bear",title,'',dict,-1)
+
+def Send_to_Clipboard(top_title,Content):
+        Cstart = time.clock()
+        popup = textwrap.fill(Content,180)
+        Cstop = time.clock()
+        Cinterval = Cstop - Cstart
+        print " textwrap time :" + str(Cinterval)
+        if(len(popup) > 60):
+            reply = "\n";
+            reply += popup;
+            hello(reply)
+            call_extension()
+        else:
+            if popup == "":
+                popup = "I dont know.. Try doing an Internet Search!"
+                Report_to_admin(str(top_title),popup)
+            hello(str(popup + "   "))
+        
+
+def call_extension():
+        regex = re.compile(':([0-9]*)')
+        s = subprocess.check_output("xdpyinfo | grep dimensions | awk '{print $2}' | awk -Fx '{print $1, $2}'",shell=True) #screen size
+        s = s.split()
+        subprocess.call(["xdotool","mousemove",str(s[0]),"0"])
+        
+
+
+def record():
+    cmd = "rec /tmp/test.flac rate 32k silence 1 0.1 3% 1 3.0 3% "
+    subprocess.call(cmd.split())
+
+
+    
+def googlecall():
+    cmd = "gstt -i /tmp/test.flac"
+    voice_to_text_json = subprocess.check_output(cmd.split())
+    voice_to_text_json = str(voice_to_text_json)
+    voice_to_text_json = voice_to_text_json.replace("'","")
+    voice_to_text = json.loads(voice_to_text_json)
+    if not voice_to_text :
+            return 0
+    voice_text = voice_to_text[0]["result"][0]["alternative"][0]["transcript"]
+    voice_text.encode('ascii','ignore')
+    
+    print "\n" + str(voice_text)
+    return voice_text
+
+
+def installation_request(text):
+    cmd = "yum list \*" + text +"\*"
+    reply = ""
+    reply += "Packages:\n"
+    reply += str(subprocess.check_output(cmd.split()))
+    reply += """\n use sudo aptitiude install <name> for Ubuntu \n\nuse yum install <name> for Fedora\n"""
+    return reply
+
+
+
+def api_ai_call(text):
+    cmd = "api_ai " + str(text)
+    reply= "\n " 
+    #checking only domains case now
+    api_ai_response = str(subprocess.check_output(cmd.split()))
+    print "\n api_ai_response \n" + str(api_ai_response)
+    api_ai_json_response = json.loads(api_ai_response)
+    print "\napi_ai_json_response\n" + str(api_ai_json_response)
+    searched_term = api_ai_json_response["result"]["resolvedQuery"]
+    searched_term = searched_term.decode('utf8')
+    print "\nsearched_term\n" + str(searched_term)
+    if api_ai_json_response["result"]["source"] == "agent":
+        if api_ai_json_response["result"]["metadata"]["intentName"] == "Report Bug":
+            reply += api_ai_json_response["result"]["parameters"]["reply"]
+            Report_to_admin(str(searched_term),api_ai_response)
+        else :
+            reply += api_ai_json_response["result"]["parameters"]["reply"]
+        #if api_ai_json_response["result"]["metadata"]["intentName"] == "Install":
+            #reply += installation_request(str(api_ai_json_response["result"]["parameters"]["any"]))
+        
+    else:
+        reply += api_ai_json_response["result"]["fulfillment"]["speech"]
+    #reply = reply.encode('ascii','ignore')
+    print "=======================What goes \|/"
+    print reply.encode('utf8')
+    changeColor()
+    Send_to_Clipboard(searched_term,reply)
+    
+
+    
+if  __name__ == '__main__' :
+    record()
+    voice_text = googlecall()
+    if voice_text == 0:
+        notify("I couldn't hear you! Try again")
+        exit()
+    #voice_text = string.join(sys.argv[1:])
+    voice_text += "   "
+    changeColor()    
+    hello(voice_text)
+    api_ai_call(voice_text)
+    
+    ##api_ai_call(sys.argv[1:])

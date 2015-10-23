@@ -1,0 +1,185 @@
+const St = imports.gi.St;
+const Main = imports.ui.main;
+const Tweener = imports.ui.tweener;
+const Gio = imports.gi.Gio;
+const Lang = imports.lang;
+const Util = imports.misc.util;
+
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+
+let COLOR_WHITE = true;
+let queryText = null;
+let bearDbusService = null;
+let micon = null;
+let replyPopup,replyText,icon;
+let corner = [];
+var textr = "I couldn't fetch";
+let gicon=Gio.icon_new_for_string(Me.path + "/icons/5.png");
+let gicon1=Gio.icon_new_for_string(Me.path + "/icons/6.png");
+
+function record() {
+    if (COLOR_WHITE == true){
+	micon.set_gicon(gicon1);
+	COLOR_WHITE = false;
+	
+    }
+    else{
+	micon.set_gicon(gicon);
+	COLOR_WHITE = true;
+    }
+    //Util.spawnCommandLine("Bear");
+
+}
+
+function _hidePopup() {
+    
+    Main.uiGroup.remove_actor(replyPopup);
+    Main.uiGroup.remove_actor(icon);
+    Main.uiGroup.remove_actor(opaque);
+    
+}
+
+function toggleOverview( node ) {
+    
+	if ( true ) {
+	    Tweener.addTween(node.ui, {
+		opacity: 255,
+		time: 3,
+		//transition: 'easeOutQuad',
+		onComplete: function () {
+		    Tweener.addTween( node.ui, {
+					opacity: 0,
+			time: 3,
+			//transition: 'easeOutQuad'
+		    } );
+		}
+	    } );
+	}
+	
+    _showPopup();    	
+}
+ 
+
+const queryInPanelIface = '<node> \
+<interface name="com.bear.queryInPanel"> \
+<method name="setText"> \
+<arg type="s" direction="in" /> \
+</method> \
+<method name="changeColor"> \
+</method> \
+</interface> \
+</node>';
+
+const queryInPanel = new Lang.Class({
+    Name: 'queryInPanel',
+    
+    _init: function() {
+	queryText.text = "Hi There..    ";
+	
+        this._dbusImpl = Gio.DBusExportedObject.wrapJSObject(queryInPanelIface, this);
+        this._dbusImpl.export(Gio.DBus.session, '/com/bear/queryInPanel');
+    },
+
+    setText: function(string) {
+	
+	if(string.indexOf("\n") > -1 ){
+	    textr = string;
+	}
+	else{
+	    queryText.text = string;
+	    queryText.add_style_class_name('panels-text');
+	    
+	}
+    },
+    changeColor: function() {
+	record();
+    }
+});
+
+
+function _showPopup() {
+   
+    let monitor = Main.layoutManager.primaryMonitor;
+    //let height_ =  monitor.height;
+    icon = new St.Icon({style_class: 'icon'});
+    
+    //textr = queryText.text;
+    
+    
+    var replyText = textr.split("\n");
+    
+    let textlength = replyText.length -1;
+    let size = 0.75;
+    if(textlength > 5 && textlength <= 10)
+    {
+	size = 0.65;
+    }
+    else if(textlength >10 && textlength <= 15)
+    {
+	size = 0.45;
+    }
+    else if(textlength >15)
+	size = 0.05;
+   //replyText.slice(0,replyText.length).join("  \n  ")
+    opaque =  new St.Label({ style_class:'opaque',
+			     width:monitor.width ,
+			     height:monitor.height});
+    Main.uiGroup.add_actor(opaque);
+    replyPopup = new St.Label({ style_class: "label",
+				text: replyText.slice(0,replyText.length).join("  \n  "),
+				width: monitor.width , height: monitor.height });
+    replyPopup.set_position(0,monitor.height);
+    icon.set_position(monitor.width-125,monitor.height);
+    Main.uiGroup.add_actor(replyPopup);
+    Tweener.addTween(replyPopup,{y: monitor.height*size+37, time: 1,transition: "easeInBack"});
+    Main.uiGroup.add_actor(icon);
+    Tweener.addTween(icon,{y: monitor.height-100,x: monitor.width-125,time:1,transition: "easeInBack"});    
+}
+
+
+
+function init() {
+    queryText = new St.Label({ text:"0:0",
+			       style_class:'panel-text'}); //"0:0"
+    bearDbusService = new queryInPanel();
+    button = new St.Bin({ style_class: 'panel-button',
+                          reactive: true,
+                          can_focus: true,
+                          x_fill: true,
+                          y_fill: false,
+                          track_hover: true });
+
+    micon = new St.Icon({gicon:gicon});
+    button.set_child(micon);
+    button.connect('button-press-event', record);
+    
+}
+
+
+function enable() {
+    Main.panel._rightBox.insert_child_at_index(button,0);
+    Main.panel._rightBox.insert_child_at_index(queryText, 0);    
+    corner[0] = {};    
+    corner[0].ui = new St.Bin( {
+	style_class: 'corner',
+	reactive: true,
+	can_focus: true,
+	x_fill: true,
+	y_fill: false,
+	track_hover: true
+    } );
+    
+    Main.uiGroup.add_actor( corner[0].ui );
+    let monitor = Main.layoutManager.primaryMonitor;
+    corner[0].ui.opacity = 0;
+    corner[0].ui.set_position(monitor.width - corner[0].ui.width + 10, - 10);
+    corner[0].ui.connect( 'enter-event', function () { toggleOverview( corner[0] ); });
+    corner[0].ui.connect( 'leave-event', function () { _hidePopup();
+						       Main.uiGroup.remove_actor(opaque); });
+}
+
+function disable() {   
+    Main.uiGroup.remove_actor( corner[0].ui );
+    Main.panel._rightBox.remove_child(queryText);
+    Main.panel._rightBox.remove_child(button);
+}
