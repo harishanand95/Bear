@@ -1,0 +1,30 @@
+#!/usr/bin/python
+import os.path, sys
+import string
+#scipy
+#numpy
+try:
+    import apiai
+except ImportError:
+    sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
+    import apiai
+
+import time
+import scipy.io.wavfile as wav
+
+CLIENT_ACCESS_TOKEN = 'd1e8a81177b64dae88326f80c2fa73d0'
+SUBSCRIBTION_KEY = 'c3f08d12-f0cb-4524-b468-1c2226857018' 
+
+def main(argv):
+    ai = apiai.ApiAI(CLIENT_ACCESS_TOKEN, SUBSCRIBTION_KEY)
+
+    request = ai.text_request()
+    " ".join(argv[1:])
+    request.query = " ".join(argv[1:])
+
+    response = request.getresponse()
+
+    print (response.read())
+
+if __name__ == '__main__':
+    main(sys.argv)
