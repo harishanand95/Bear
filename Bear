@@ -9,12 +9,12 @@ import os
 import dbus
 import urllib
 import dbus
-#import sys     TESTING PURPOSE
+import sys     
 bus = dbus.SessionBus()
 helloservice = bus.get_object('org.gnome.Shell', '/com/bear/queryInPanel')
 hello = helloservice.get_dbus_method('setText', 'com.bear.queryInPanel')
 changeColor = helloservice.get_dbus_method('changeColor', 'com.bear.queryInPanel')
-#print hello(str(" ".join(sys.argv[1:])))  TESTING PURPOSE 
+#print hello(str(" ".join(sys.argv[1:])))  Hello() dbus TESTING 
 
 
 voice_to_text = ""
@@ -38,7 +38,7 @@ def notify(title):
         interface.Notify('Siri',12,icon_location,"Bear",title,'',dict,-1)
 
 def send_to_extension(top_title,Content):
-        #Cstart = time.clock()
+        #Cstart = time.clock()  time calculation
         popup = textwrap.fill(Content,180)
         #Cstop = time.clock()
         #Cinterval = Cstop - Cstart
@@ -57,7 +57,7 @@ def send_to_extension(top_title,Content):
 
 def call_extension():
         regex = re.compile(':([0-9]*)')
-        s = subprocess.check_output("xdpyinfo | grep dimensions | awk '{print $2}' | awk -Fx '{print $1, $2}'",shell=True) #screen size
+        s = subprocess.check_output("xdpyinfo | grep dimensions | awk '{print $2}' | awk -Fx '{print $1, $2}'",shell=True) # capturing screen size
         s = s.split()
         subprocess.call(["xdotool","mousemove",str(s[0]),"0"])
         
@@ -84,20 +84,11 @@ def googlecall():
     return voice_text
 
 
-def installation_request(text):
-    cmd = "yum list \*" + text +"\*"
-    reply = ""
-    reply += "Packages:\n"
-    reply += str(subprocess.check_output(cmd.split()))
-    reply += """\n use sudo aptitiude install <name> for Ubuntu \n\nuse yum install <name> for Fedora\n"""
-    return reply
-
-
 
 def api_ai_call(text):
     cmd = "api_ai " + str(text)
     reply= "\n " 
-    #checking only domains case now
+    # checking only domains case now
     api_ai_response = str(subprocess.check_output(cmd.split()))
     print "\n api_ai_response \n" + str(api_ai_response)
     api_ai_json_response = json.loads(api_ai_response)
@@ -111,12 +102,9 @@ def api_ai_call(text):
             Report_to_admin(str(searched_term),api_ai_response)
         else :
             reply += api_ai_json_response["result"]["parameters"]["reply"]
-        #if api_ai_json_response["result"]["metadata"]["intentName"] == "Install":
-            #reply += installation_request(str(api_ai_json_response["result"]["parameters"]["any"]))
-        
     else:
         reply += api_ai_json_response["result"]["fulfillment"]["speech"]
-    #reply = reply.encode('ascii','ignore')   TESTING PURPOSE
+    #reply = reply.encode('ascii','ignore')  utf to ascii terminal case test
     print "=======================REPLY==================="
     print reply.encode('utf8')
     changeColor()
@@ -125,15 +113,16 @@ def api_ai_call(text):
 
     
 if  __name__ == '__main__' :
-    record()
-    voice_text = googlecall()
-    if voice_text == 0:
-        notify("I couldn't hear you! Try again")
-        exit()
-    #voice_text = string.join(sys.argv[1:]) TESTING PURPOSE
+    if len(sys.argv) < 2:
+        record()
+        voice_text = googlecall()
+        if voice_text == 0:
+            notify("I couldn't hear you! Try again")
+            exit()
+    else:
+        voice_text = string.join(sys.argv[1:]) 
     voice_text += "   "
     changeColor()    
     hello(voice_text)
     api_ai_call(voice_text)
-    
-    ##api_ai_call(sys.argv[1:]) TESTING PURPOSE
+    ##api_ai_call(sys.argv[1:]) direct api_ai call TESTING
