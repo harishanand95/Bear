@@ -31,7 +31,7 @@ def notify(title):
         urllib.urlretrieve("https://www.iconfinder.com/icons/204392/download/png/128", "Bear.png")
         icon_location = location + "/Bear.png"
         dict = {'image-path':icon_location}
-        interface.Notify('Siri',12,icon_location,"Bear",title,'',dict,-1)
+        interface.Notify('Bear',12,icon_location,"Bear",title,'',dict,-1)
 
 def send_to_extension(top_title,Content):
     popup = textwrap.fill(Content,180)
@@ -100,6 +100,7 @@ def api_ai_call(text):
 if  __name__ == '__main__' :
     record()
     voice_text = googlecall()
+    print voice_text
     if voice_text == 0:
         notify("I couldn't hear you! Try again")
         exit()
