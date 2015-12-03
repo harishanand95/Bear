@@ -98,14 +98,15 @@ def api_ai_call(text):
    
     
 if  __name__ == '__main__' :
-    record()
-    voice_text = googlecall()
-    print voice_text
-    if voice_text == 0:
-        notify("I couldn't hear you! Try again")
-        exit()
+    if len(sys.argv) < 2:
+        record()
+        voice_text = googlecall()
+        if voice_text == 0:
+            notify("I couldn't hear you! Try again")
+            exit()
+    else:
+        voice_text = string.join(sys.argv[1:]) 
     voice_text += "   "
     changeColor()    
     hello(voice_text)
     api_ai_call(voice_text)
-    
