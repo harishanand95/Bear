@@ -8,6 +8,10 @@ import dbus
 import urllib
 import dbus
 
+# USE GOOGLE SPEECH API FOR BETTER ACCURACY. TO USE IT READ THE README FILE. 
+
+using_google_speech_api = False
+
 bus = dbus.SessionBus()
 helloservice = bus.get_object('org.gnome.Shell', '/com/bear/queryInPanel')
 hello = helloservice.get_dbus_method('setText', 'com.bear.queryInPanel')
@@ -23,15 +27,6 @@ def Report_to_admin(subject,content):
               "subject": subject,
               "text": content})
 
-def notify(title):
-        location = os.getcwd()    
-        bus = dbus.SessionBus()
-        notifications = bus.get_object('org.freedesktop.Notifications', '/org/freedesktop/Notifications')
-        interface = dbus.Interface(notifications, 'org.freedesktop.Notifications')
-        urllib.urlretrieve("https://www.iconfinder.com/icons/204392/download/png/128", "Bear.png")
-        icon_location = location + "/Bear.png"
-        dict = {'image-path':icon_location}
-        interface.Notify('Bear',12,icon_location,"Bear",title,'',dict,-1)
 
 def send_to_extension(top_title,Content):
     popup = textwrap.fill(Content,180)
@@ -51,7 +46,6 @@ def call_extension():
     s = subprocess.check_output("xdpyinfo | grep dimensions | awk '{print $2}' | awk -Fx '{print $1, $2}'",shell=True) #screen size
     s = s.split()
     subprocess.call(["xdotool","mousemove",str(s[0]),"0"])
-        
 
 
 def record():
@@ -59,10 +53,10 @@ def record():
     subprocess.call(cmd.split())
 
 
-def googlecall():
-    cmd = "gstt -i /tmp/test.flac"
-    voice_to_text_json = subprocess.check_output(cmd.split())
-    voice_to_text_json = str(voice_to_text_json)
+def google_voice_call():
+    cmd = "cd ~/.Bear && node index.js"
+    voice_to_text_json = subprocess.check_output(cmd,shell=True)
+    voice_to_text_json = str(voice_to_text_json[0:-1])
     voice_to_text_json = voice_to_text_json.replace("'","")
     voice_to_text = json.loads(voice_to_text_json)
     if not voice_to_text :
@@ -71,21 +65,22 @@ def googlecall():
     voice_text.encode('ascii','ignore')
     return voice_text
 
+
+# Authorisation and Subscription key is obtained from api.ai. If you want to use your own api you can provide your keys by creating an account at api.ai.
 def api_ai_voice_call():
     subp = subprocess.check_output(['curl','-k','-F',"request={'timezone':'America/New_York', 'lang':'en'};type=application/json", '-F',"voiceData=@/tmp/test.wav;type=audio/wav",'-H',"Authorization: Bearer d1e8a81177b64dae88326f80c2fa73d0",'-H',"ocp-apim-subscription-key: c3f08d12-f0cb-4524-b468-1c2226857018","https://api.api.ai/v1/query?v=20150910"])
     api_ai_json_response = json.loads(subp)
-    #searched_term = api_ai_json_response["result"]["resolvedQuery"]
-    #searched_term = searched_term.decode('utf8')
     return api_ai_json_response 
 
     
 def api_ai_call(api_ai_json_response,flag):
-    
-    #checking only domains case now
+    #places an api.ai call if command line or Google speech recognition is used 
     if flag :
          a = ['curl','-H',"Content-Type: application/json; charset=utf-8",'-H',"Authorization: Bearer d1e8a81177b64dae88326f80c2fa73d0",'-H',"ocp-apim-subscription-key: c3f08d12-f0cb-4524-b468-1c2226857018",'--data']
-         b1 = "{'query':\""
-         b2 = "\", 'lang':'en', 'contexts':['weather', 'local']}"
+         b1 = "{'query':'"
+         b2 = "', 'lang':'en', 'contexts':['weather', 'local']}"
+         api_ai_json_response = api_ai_json_response.replace("'","")
+         api_ai_json_response = api_ai_json_response.replace("\"","")
          b = b1 + str(api_ai_json_response) + b2
          c = "https://api.api.ai/v1/query?v=20150910"
          a.append(b)
@@ -113,13 +108,14 @@ def api_ai_call(api_ai_json_response,flag):
 if  __name__ == '__main__' :
     if len(sys.argv) < 2:
         record()
-        voice_text = api_ai_voice_call()
-        flag = False
-        #if voice_text == 0:
-            #notify("I couldn't hear you! Try again")
-            #exit()
+        if using_google_speech_api:
+            voice_text = google_voice_call()
+            hello(voice_text)
+            flag = True
+        else:
+            voice_text = api_ai_voice_call()
+            flag = False
     else:
         voice_text = string.join(sys.argv[1:])
         flag = True
-    
     api_ai_call(voice_text,flag)
