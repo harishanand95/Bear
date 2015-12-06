@@ -9,7 +9,7 @@ import urllib
 import dbus
 
 # USE GOOGLE SPEECH API FOR BETTER ACCURACY. TO USE IT READ THE README FILE. 
-
+# RUN THE SETUP FILE AGAIN IF GOOGLE SPEECH API HAS BEEN ADDED
 using_google_speech_api = False
 
 bus = dbus.SessionBus()
