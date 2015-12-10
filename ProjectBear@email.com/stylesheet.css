@@ -1,16 +1,17 @@
 .label {
-	max-width:180px;
+    max-width:180px;
     font-weight: bold;
     color: #000000;
-	font-size: 20px;
+    font-size: 20px;
     background-color: #f1f1f1;
+    border-radius: 5px;
     }
 .opaque {
     background-color: rgba(0,0,0,0.4);   
 }
 .icon {
     
-    background-image: url("icons/m2.png");
+    background-image: url("icons/w.png");
 }
 .corner
 {

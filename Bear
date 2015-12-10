@@ -29,11 +29,11 @@ def Report_to_admin(subject,content):
 
 
 def send_to_extension(top_title,Content):
-    popup = textwrap.fill(Content,180)
+    popup = textwrap.fill(Content,140)
     if(len(popup) > 60):
         reply = "\n";
         reply += popup;
-        hello(reply)
+        hello(reply+"    ")
         call_extension()
     else:
         if popup == "":
