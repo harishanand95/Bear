@@ -13,11 +13,11 @@ let bearDbusService = null;
 let micon = null;
 let replyPopup,replyText,icon;
 let corner = [];
-var textr = "I couldn't fetch";
+var textr = " How to use Bear can be found in the webpage.";
 let gicon=Gio.icon_new_for_string(Me.path + "/icons/5.png");
 let gicon1=Gio.icon_new_for_string(Me.path + "/icons/6.png");
 
-function record() {
+function colorChange() {
     if (COLOR_WHITE == true){
 	micon.set_gicon(gicon1);
 	COLOR_WHITE = false;
@@ -27,10 +27,17 @@ function record() {
 	micon.set_gicon(gicon);
 	COLOR_WHITE = true;
     }
-    //Util.spawnCommandLine("Bear");
-
 }
 
+function callBear(){
+    
+    if (COLOR_WHITE == true){
+	queryText.text = "Listening.....     ";
+	queryText.add_style_class_name('panels-text');
+	Util.spawnCommandLine("Bear");
+    }
+    colorChange();
+}
 function _hidePopup() {
     
     Main.uiGroup.remove_actor(replyPopup);
@@ -81,18 +88,19 @@ const queryInPanel = new Lang.Class({
     },
 
     setText: function(string) {
-	
+	// Display as pop up
 	if(string.indexOf("\n") > -1 ){
 	    textr = string;
 	}
 	else{
+	// Display as panel notification
 	    queryText.text = string;
 	    queryText.add_style_class_name('panels-text');
 	    
 	}
     },
     changeColor: function() {
-	record();
+	colorChange();
     }
 });
 
@@ -127,9 +135,9 @@ function _showPopup() {
     Main.uiGroup.add_actor(opaque);
     replyPopup = new St.Label({ style_class: "label",
 				text: replyText.slice(0,replyText.length).join("  \n  "),
-				width: monitor.width , height: monitor.height });
-    replyPopup.set_position(0,monitor.height);
-    icon.set_position(monitor.width-125,monitor.height);
+				width: monitor.width-250 , height: monitor.height });
+    replyPopup.set_position(125,monitor.height);
+    icon.set_position(monitor.width-125,monitor.height-125);
     Main.uiGroup.add_actor(replyPopup);
     Tweener.addTween(replyPopup,{y: monitor.height*size+37, time: 1,transition: "easeInBack"});
     Main.uiGroup.add_actor(icon);
@@ -151,8 +159,8 @@ function init() {
 
     micon = new St.Icon({gicon:gicon});
     button.set_child(micon);
-    button.connect('button-press-event', record);
-    
+    button.connect('button-press-event',callBear);
+   
 }
 
 
