@@ -30,8 +30,9 @@ def Report_to_admin(subject,content):
 
 def send_to_extension(top_title,Content):
     popup = textwrap.fill(Content,140)
+    # To generate slide-in popup notification start the text with a \n and then call hello() with that text.
     if(len(popup) > 60):
-        reply = "\n";
+        reply = "\n"; # generates the slide in popup
         reply += popup;
         hello(reply+"    ")
         call_extension()
@@ -39,8 +40,8 @@ def send_to_extension(top_title,Content):
         if popup == "":
             popup = "I dont know.. Try doing an Internet Search!"
             Report_to_admin(str(top_title),popup)
-        hello(str(popup + "   "))
-        
+        hello(str(popup + "   ")) #only panel message
+    
 
 def call_extension():
     s = subprocess.check_output("xdpyinfo | grep dimensions | awk '{print $2}' | awk -Fx '{print $1, $2}'",shell=True) #screen size
@@ -49,13 +50,27 @@ def call_extension():
 
 
 def record():
-    cmd = "rec /tmp/test.wav rate 44k silence 1 0.1 3% 1 3.0 3% "
-    subprocess.call(cmd.split())
+    if using_google_speech_api:
+        cmd = "rec -c 1 -r 44000 -b 16 /tmp/test.flac gain +10 trim 0 10"
+        subprocess.call(cmd.split())
+        hello(" . : : .  Google Speech call in progress  . : : .   ")
+    else:
+        
+        cmd = "rec -c 1 -r 16000 -b 16 /tmp/test.wav gain +10 trim 0 10"
+        subprocess.call(cmd.split())
+        cmd = "sox /tmp/test.wav -n trim 0 1.5 noiseprof speech.noise-profile"
+        subprocess.call(cmd.split())
+        cmd = "sox /tmp/test.wav /tmp/cleanedtest.wav noisered speech.noise-profile 0.5"
+        subprocess.call(cmd.split())
+        hello(" . : : .  Api.ai Speech call in progress  . : : .   ")
 
-
+    
 def google_voice_call():
     cmd = "cd ~/.Bear && node index.js"
     voice_to_text_json = subprocess.check_output(cmd,shell=True)
+    if voice_to_text_json[0:9] == "undefined":
+        send_to_extension("Error 502 (Server Error)","Error 502 (Server Error).Google Speech API encountered a temporary error and could not complete your request. Please check if you have internet connection.")
+        exit
     voice_to_text_json = str(voice_to_text_json[0:-1])
     voice_to_text_json = voice_to_text_json.replace("'","")
     voice_to_text = json.loads(voice_to_text_json)
@@ -68,13 +83,14 @@ def google_voice_call():
 
 # Authorisation and Subscription key is obtained from api.ai. If you want to use your own api you can provide your keys by creating an account at api.ai.
 def api_ai_voice_call():
-    subp = subprocess.check_output(['curl','-k','-F',"request={'timezone':'America/New_York', 'lang':'en'};type=application/json", '-F',"voiceData=@/tmp/test.wav;type=audio/wav",'-H',"Authorization: Bearer d1e8a81177b64dae88326f80c2fa73d0",'-H',"ocp-apim-subscription-key: c3f08d12-f0cb-4524-b468-1c2226857018","https://api.api.ai/v1/query?v=20150910"])
+    subp = subprocess.check_output(['curl','-k','-F',"request={'timezone':'America/New_York', 'lang':'en'};type=application/json", '-F',"voiceData=@/tmp/cleanedtest.wav;type=audio/wav",'-H',"Authorization: Bearer d1e8a81177b64dae88326f80c2fa73d0",'-H',"ocp-apim-subscription-key: c3f08d12-f0cb-4524-b468-1c2226857018","https://api.api.ai/v1/query?v=20150910"])
     api_ai_json_response = json.loads(subp)
     return api_ai_json_response 
 
     
 def api_ai_call(api_ai_json_response,flag):
     #places an api.ai call if command line or Google speech recognition is used 
+    hello(" . : : .  Api.ai call in progress  . : : .   ")
     if flag :
          a = ['curl','-H',"Content-Type: application/json; charset=utf-8",'-H',"Authorization: Bearer d1e8a81177b64dae88326f80c2fa73d0",'-H',"ocp-apim-subscription-key: c3f08d12-f0cb-4524-b468-1c2226857018",'--data']
          b1 = "{'query':'"
@@ -88,6 +104,7 @@ def api_ai_call(api_ai_json_response,flag):
          sub_response = subprocess.check_output(a)
          api_ai_json_response = json.loads(sub_response)
     reply =""
+    #print "\n api_ai_json_response : " + str(api_ai_json_response)
     searched_term = api_ai_json_response["result"]["resolvedQuery"]
     searched_term = searched_term.decode('utf8')
     print searched_term
