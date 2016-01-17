@@ -1,5 +1,5 @@
 ### Bear
-#https://harishanand95.github.io/Bear
+https://harishanand95.github.io/Bear
 
 Cortana or Siri like application (personal assistant) for Linux (Gnome 3)
 
