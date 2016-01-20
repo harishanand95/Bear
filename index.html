@@ -36,20 +36,23 @@
 <li>-- Creation of a text field to type and search.</li>
 </ul>
 
+<p>The project has only been tested in Fedora systems.</p>
+
 <h3>
 <a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h3>
 
 <ol>
 <li>Run the command "python setup.py " on the extracted folder.</li>
-<li>In Settings -&gt; About, Get the Shell number.</li>
+<li>In Settings -&gt; Details , Get the GNOME Version number.</li>
 <li>Add/Replace the shell number to the <a href="mailto:Projectbear@email.com">Projectbear@email.com</a>/metadata.json file.</li>
-<li>Enable Bear in extension tab of Gnome Tweak Tool.</li>
+<li>Enable Bear in extension tab of Gnome Tweak Tool application.</li>
 </ol>
 
 <h3>
 <a id="google-speech-api" class="anchor" href="#google-speech-api" aria-hidden="true"><span class="octicon octicon-link"></span></a>Google Speech API</h3>
 
-<p>Turn ON Google Speech API, you need an API key from Google. You can obtain the key by following the steps in this <a href="https://www.chromium.org/developers/how-tos/api-keys">Google API link</a>.</p>
+<p>To have a highly accurate prediction of voice (even during noise), use GOOGLE SPEECH API.
+To use Google Speech API, you need an API key from Google. You can obtain the key by following the steps in this <a href="https://www.chromium.org/developers/how-tos/api-keys">Google API link</a>.</p>
 
 <p>Once you have obtained the key, few changes are needed. </p>
 
@@ -68,14 +71,15 @@ Speak to Bear after clicking speech icon <img src="https://maxcdn.icons8.com/iOS
 
 <p>Say , </p>
 
-<pre><code>         " What is Google?" or " Who is Bill Gates?"
+<pre><code>         " What is Google?" or " Who is Bill Gates?" or "how are you"
 </code></pre>
 
-<p>It records the audio for 10 seconds and sents it for processing to Api.ai speech recognition engine.
+<p>to talk to Bear/api.ai engine.
+It records the audio for 10 seconds and sents it for processing to Api.ai speech recognition engine.
 If Google Speech API is enabled, then audio file is sent to Google Speech engine. 
 After obtaining the audio text, it is sent for processing at Api.ai and results are displayed as card notification.</p>
 
-<p>Also in terminal, type </p>
+<p>Also in terminal, you can call Bear command by giving </p>
 
 <pre><code>                   "Bear What is Google?"
                    "Bear Who is Bill Gates?"
@@ -96,6 +100,16 @@ After obtaining the audio text, it is sent for processing at Api.ai and results 
 
     </section>
 
-  
+            <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-72679021-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
   </body>
 </html>
