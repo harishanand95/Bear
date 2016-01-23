@@ -87,7 +87,7 @@ def google_voice_call():
     cmd = "cd ~/.Bear && node index.js"
     voice_to_text_json = subprocess.check_output(cmd,shell=True)
     if voice_to_text_json[0:9] == "undefined":
-        send_to_extension("Error 502 (Server Error)","Error 502 (Server Error).Google Speech API encountered a temporary error and could not complete your request. Please check if you have internet connection.","")
+        send_to_extension("Error 502 (Server Error)","Error 502 (Server Error).Google Speech API encountered a temporary error and could not complete your request. Please check if you have internet connection. To use Api.ai's speech recognition open /usr/local/bin/Bear file and change using_google_speech_api = True to False","")
         exit
     voice_to_text_json = str(voice_to_text_json[0:-1])
     voice_to_text_json = voice_to_text_json.replace("'","")
