@@ -16,16 +16,16 @@ def nodejs_install():
 if __name__ == '__main__':
     system = platform.linux_distribution()
     if system[0] == 'Fedora':
-        subprocess.call(["sudo", "yum","install","xclip","ffmpeg"])
-        subprocess.call(["sudo", "yum","install","xdotool"])
+        subprocess.call(["sudo", "yum","install","xclip","libxml2","python-lxml","python-dbus"])
+        subprocess.call(["sudo", "yum","install","xdotool","libxslt"])
         
     else :
-        subprocess.call(["sudo", "apt-get","install","xclip","ffmpeg"])
-        subprocess.call(["sudo", "apt-get","install","xdotool"])
+        subprocess.call(["sudo", "apt-get","install","xclip","libxml2","ffmpeg","python-lxml","python-dbus"])
+        subprocess.call(["sudo", "apt-get","install","xdotool","libxslt"])
     
     
     nodejs_install()
-    
+    subprocess.call(["sudo", "pip","install","requests","wikiapi"])
     home = subprocess.check_output("echo $HOME", shell=True)
     home = home[:-1]
     cmd = "cp -r ProjectBear@email.com/ " + str(home) + "/.local/share/gnome-shell/extensions/" 
