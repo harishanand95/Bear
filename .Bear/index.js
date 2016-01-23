@@ -1,7 +1,7 @@
 var speech = require('google-speech-api');
 var opts = {
   file:'/tmp/test.wav',
-  key: 'ENTER YOUR GOOGLE SPEECH API KEY'
+  key: 'AIzaSyDXbqhPK9BFbWGKzSesew1c6kNjNT9ExJ8'
 };
 
 speech(opts, function (err, results) {
