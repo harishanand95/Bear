@@ -4,9 +4,9 @@ const Tweener = imports.ui.tweener;
 const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 const Util = imports.misc.util;
-
+const GLib = imports.gi.GLib;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-
+//let image_show = false; //corrected
 let COLOR_WHITE = true;
 let queryText = null;
 let bearDbusService = null;
@@ -16,6 +16,8 @@ let corner = [];
 var textr = " How to use Bear can be found in the webpage.";
 let gicon=Gio.icon_new_for_string(Me.path + "/icons/5.png");
 let gicon1=Gio.icon_new_for_string(Me.path + "/icons/6.png");
+//let _imageBin = null;
+let icon = null;
 
 function colorChange() {
     if (COLOR_WHITE == true){
@@ -38,6 +40,7 @@ function callBear(){
     }
     colorChange();
 }
+
 function _hidePopup() {
     
     Main.uiGroup.remove_actor(replyPopup);
@@ -71,6 +74,8 @@ const queryInPanelIface = '<node> \
 <interface name="com.bear.queryInPanel"> \
 <method name="setText"> \
 <arg type="s" direction="in" /> \
+<arg type="i" direction="in" />\
+<arg type="s" direction="in" /> \
 </method> \
 <method name="changeColor"> \
 </method> \
@@ -81,23 +86,31 @@ const queryInPanel = new Lang.Class({
     Name: 'queryInPanel',
     
     _init: function() {
-	queryText.text = "Hi There..    ";
+	queryText.text = "Hello....   ";
 	
         this._dbusImpl = Gio.DBusExportedObject.wrapJSObject(queryInPanelIface, this);
         this._dbusImpl.export(Gio.DBus.session, '/com/bear/queryInPanel');
     },
 
-    setText: function(string) {
+    setText: function(string,val,str) {
 	// Display as pop up
-	if(string.indexOf("\n") > -1 ){
-	    textr = string;
+	if(val == 0 ){
+		textr = string;
+		//image_show = false;
 	}
-	else{
+	if (val == 1){
 	// Display as panel notification
 	    queryText.text = string;
 	    queryText.add_style_class_name('panels-text');
-	    
+	    //image_show = false;
 	}
+	// Displays as pop up. This part will be modified in future to include pictures
+	// as part of notifications.
+	if (val == -1){
+        textr = string;
+	image_show = true;
+	}
+
     },
     changeColor: function() {
 	colorChange();
@@ -106,13 +119,12 @@ const queryInPanel = new Lang.Class({
 
 
 function _showPopup() {
-   
+
+   //setImage(sicon);
     let monitor = Main.layoutManager.primaryMonitor;
     //let height_ =  monitor.height;
     icon = new St.Icon({style_class: 'icon'});
-    
     //textr = queryText.text;
-    
     
     var replyText = textr.split("\n");
     
@@ -133,19 +145,19 @@ function _showPopup() {
 			     width:monitor.width ,
 			     height:monitor.height});
     Main.uiGroup.add_actor(opaque);
+	
     replyPopup = new St.Label({ style_class: "label",
 				text: replyText.slice(0,replyText.length).join("  \n  "),
 				width: monitor.width-250 , height: monitor.height });
     replyPopup.set_position(125,monitor.height);
-    icon.set_position(monitor.width-125,monitor.height-125);
+    //icon.set_position(monitor.width-250,monitor.height-450);//
     Main.uiGroup.add_actor(replyPopup);
     Tweener.addTween(replyPopup,{y: monitor.height*size+37, time: 1,transition: "easeInBack"});
-    Main.uiGroup.add_actor(icon);
-    Tweener.addTween(icon,{y: monitor.height-100,x: monitor.width-125,time:1,transition: "easeInBack"});    
+    
+icon.set_position(monitor.width,monitor.height);
+Main.uiGroup.add_actor(icon);
+Tweener.addTween(icon,{y: monitor.height-100,x: monitor.width-125,time:1,transition: "easeInBack"});
 }
-
-
-
 function init() {
     queryText = new St.Label({ text:"0:0",
 			       style_class:'panel-text'}); //"0:0"
@@ -162,7 +174,6 @@ function init() {
     button.connect('button-press-event',callBear);
    
 }
-
 
 function enable() {
     Main.panel._rightBox.insert_child_at_index(button,0);

@@ -8,15 +8,16 @@ import dbus
 import urllib
 import dbus
 
-# USE GOOGLE SPEECH API FOR BETTER ACCURACY. TO USE IT READ THE README FILE. 
-# RUN THE SETUP FILE AGAIN IF GOOGLE SPEECH API HAS BEEN ADDED
-using_google_speech_api = False
+# USE GOOGLE SPEECH API FOR BETTER ACCURACY.
+using_google_speech_api = True
 
 bus = dbus.SessionBus()
 helloservice = bus.get_object('org.gnome.Shell', '/com/bear/queryInPanel')
 hello = helloservice.get_dbus_method('setText', 'com.bear.queryInPanel')
 changeColor = helloservice.get_dbus_method('changeColor', 'com.bear.queryInPanel')
 voice_to_text = ""
+
+# Reports searches that Bear couldn't understand to Admin.
 
 def Report_to_admin(subject,content):
     return requests.post(
@@ -27,35 +28,67 @@ def Report_to_admin(subject,content):
               "subject": subject,
               "text": content})
 
+# Function to create slide in popup notification. 
+# call hello(pop_up_content,<number>,filename)
+# <number> can be 0 - Display as pop up
+#                 1 - Display as panel notification (only limited content allowed <60)
+# As of now <number> -1 is in development phase which creates a pop up with pic.
+# Filename - filename of the picture ( NOT WORKING). Just provide "".
+# pop_up_content - content to be displayed as part of notification.
 
-def send_to_extension(top_title,Content):
-    popup = textwrap.fill(Content,150)
+def send_to_extension(top_title,Content,filename):
+    popup = textwrap.fill(Content,120)
+    
     if(len(popup) > 60):
-        reply = "\n";
+        #print "inside send to extension"
+        reply = "\n"; 
         reply += popup;
-        hello(reply+"    ")
+        if filename != "":
+            print "yes filename"+str(filename)
+            hello(reply+"    ",-1,filename)
+        else:
+            print "no filename" +str(filename)
+            hello(reply+"    ",0,"")
         call_extension()
     else:
         if popup == "":
             popup = "I dont know.. Try doing an Internet Search!"
             Report_to_admin(str(top_title),popup)
-        hello(str(popup + "   "))
-        
+        hello(str(popup + "   "),1,"")
+
+# Function to move the mouse to right top end of the screen
+# which creates the pop up notification.
 
 def call_extension():
     s = subprocess.check_output("xdpyinfo | grep dimensions | awk '{print $2}' | awk -Fx '{print $1, $2}'",shell=True) #screen size
     s = s.split()
     subprocess.call(["xdotool","mousemove",str(s[0]),"0"])
 
+# Function to record the voice and send it either to Google Speech API or 
+# to Api.ai 's speech recognition.
 
 def record():
-    cmd = "rec /tmp/test.wav rate 44k silence 1 0.1 3% 1 3.0 3% "
-    subprocess.call(cmd.split())
+    if using_google_speech_api:
+        cmd = "rec -c 1 -r 44000 -b 16 /tmp/test.flac gain +10 trim 0 10"
+        subprocess.call(cmd.split())
+        hello(" . : : .  Google Speech API call in progress  . : : .   ",1,"")
+    else:
+        
+        cmd = "rec -c 1 -r 16000 -b 16 /tmp/test.wav gain +10 trim 0 10"
+        subprocess.call(cmd.split())
+        cmd = "sox /tmp/test.wav -n trim 0 1.5 noiseprof speech.noise-profile"
+        subprocess.call(cmd.split())
+        cmd = "sox /tmp/test.wav /tmp/cleanedtest.wav noisered speech.noise-profile 0.5"
+        subprocess.call(cmd.split())
+        hello(" . : : .  Api.ai Speech call in progress  . : : .   ",1,"")
 
-
+# Function to send the recorded voice to Google Speech API    
 def google_voice_call():
     cmd = "cd ~/.Bear && node index.js"
     voice_to_text_json = subprocess.check_output(cmd,shell=True)
+    if voice_to_text_json[0:9] == "undefined":
+        send_to_extension("Error 502 (Server Error)","Error 502 (Server Error).Google Speech API encountered a temporary error and could not complete your request. Please check if you have internet connection.","")
+        exit
     voice_to_text_json = str(voice_to_text_json[0:-1])
     voice_to_text_json = voice_to_text_json.replace("'","")
     voice_to_text = json.loads(voice_to_text_json)
@@ -65,16 +98,21 @@ def google_voice_call():
     voice_text.encode('ascii','ignore')
     return voice_text
 
+# Function that calls the API.AI voice recogntion engine
+# Authorisation and Subscription key is obtained from api.ai. If you want to use your own api.ai account you can provide your keys by creating an account at api.ai.
 
-# Authorisation and Subscription key is obtained from api.ai. If you want to use your own api you can provide your keys by creating an account at api.ai.
 def api_ai_voice_call():
-    subp = subprocess.check_output(['curl','-k','-F',"request={'timezone':'America/New_York', 'lang':'en'};type=application/json", '-F',"voiceData=@/tmp/test.wav;type=audio/wav",'-H',"Authorization: Bearer d1e8a81177b64dae88326f80c2fa73d0",'-H',"ocp-apim-subscription-key: c3f08d12-f0cb-4524-b468-1c2226857018","https://api.api.ai/v1/query?v=20150910"])
+    subp = subprocess.check_output(['curl','-k','-F',"request={'timezone':'America/New_York', 'lang':'en'};type=application/json", '-F',"voiceData=@/tmp/cleanedtest.wav;type=audio/wav",'-H',"Authorization: Bearer d1e8a81177b64dae88326f80c2fa73d0",'-H',"ocp-apim-subscription-key: c3f08d12-f0cb-4524-b468-1c2226857018","https://api.api.ai/v1/query?v=20150910"])
     api_ai_json_response = json.loads(subp)
     return api_ai_json_response 
 
-    
+# Function that calls the API.AI NLP engine
+#    Flag variable contains true or false value 
+#        True  -  when search term is available, and needs a api.ai NLP understanding
+#        False -  when api.ai voice call was done, NLP was already done.
+
 def api_ai_call(api_ai_json_response,flag):
-    #places an api.ai call if command line or Google speech recognition is used 
+    hello(" . : : .  Api.ai call in progress  . : : .  ",1,"")
     if flag :
          a = ['curl','-H',"Content-Type: application/json; charset=utf-8",'-H',"Authorization: Bearer d1e8a81177b64dae88326f80c2fa73d0",'-H',"ocp-apim-subscription-key: c3f08d12-f0cb-4524-b468-1c2226857018",'--data']
          b1 = "{'query':'"
@@ -88,11 +126,13 @@ def api_ai_call(api_ai_json_response,flag):
          sub_response = subprocess.check_output(a)
          api_ai_json_response = json.loads(sub_response)
     reply =""
+    print "\n api_ai_json_response : " + str(api_ai_json_response)
     searched_term = api_ai_json_response["result"]["resolvedQuery"]
     searched_term = searched_term.decode('utf8')
     print searched_term
     changeColor()    
-    hello(searched_term)
+    hello(searched_term,1,"")
+    
     if api_ai_json_response["result"]["source"] == "agent":
         if api_ai_json_response["result"]["metadata"]["intentName"] == "Report Bug":
             reply += api_ai_json_response["result"]["parameters"]["reply"]
@@ -101,8 +141,9 @@ def api_ai_call(api_ai_json_response,flag):
             reply += api_ai_json_response["result"]["parameters"]["reply"]
     else:
         reply += api_ai_json_response["result"]["fulfillment"]["speech"]
+        query = api_ai_json_response["result"]["parameters"]["q"]
         changeColor()
-    send_to_extension(searched_term,reply)
+        send_to_extension(searched_term,reply,"")
    
     
 if  __name__ == '__main__' :
@@ -110,7 +151,7 @@ if  __name__ == '__main__' :
         record()
         if using_google_speech_api:
             voice_text = google_voice_call()
-            hello(voice_text)
+            hello(voice_text,1,"")
             flag = True
         else:
             voice_text = api_ai_voice_call()

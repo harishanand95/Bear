@@ -1,4 +1,4 @@
 {"name": "Bear",
  "description": "It is the display interface for the artificial agent Bear.",
- "shell-version": ["3.16.3"],
+ "shell-version": ["3.16.3","3.18.1"],
   "uuid": "ProjectBear@email.com"}
