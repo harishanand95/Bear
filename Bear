@@ -73,7 +73,6 @@ def record():
         subprocess.call(cmd.split())
         hello(" . : : .  Google Speech API call in progress  . : : .   ",1,"")
     else:
-        
         cmd = "rec -c 1 -r 16000 -b 16 /tmp/test.wav gain +10 trim 0 10"
         subprocess.call(cmd.split())
         cmd = "sox /tmp/test.wav -n trim 0 1.5 noiseprof speech.noise-profile"
