@@ -141,7 +141,7 @@ def api_ai_call(api_ai_json_response,flag):
             reply += api_ai_json_response["result"]["parameters"]["reply"]
     else:
         reply += api_ai_json_response["result"]["fulfillment"]["speech"]
-        query = api_ai_json_response["result"]["parameters"]["q"]
+        query = api_ai_json_response["result"]["resolvedQuery"]
         changeColor()
         send_to_extension(searched_term,reply,"")
    
