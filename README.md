@@ -1,15 +1,19 @@
 ### Bear
-https://harishanand95.github.io/Bear
-
 Cortana or Siri like application (personal assistant) for Linux (Gnome 3)
+
+https://harishanand95.github.io/Bear
 
 ## Installation of Bear.
 
-   1. In terminal run python setup.py 
-   2. Now in system details shell version number can be obtained and replace shell number in it with that number in Projectbear@email.com/metadata.json file.
-   3. Enable Bear in extension tab of Gnome Tweak Tool.
-   4. Do a GNOME Restart by Alt + F2 and then type r.
-   5. Please make sure that there is microphone and is not MUTED.
+   1. In terminal, run make install.
+
+## Pitfalls
+
+Do the following to resolve issues that arises after installing.
+   1. Do a GNOME Restart by Alt + F2 and then type r.
+   2. Please make sure that there is microphone and is not MUTED.
 
 You can also provide your query as a statement after Bear terminal command and result will be fetched.
+
+
 

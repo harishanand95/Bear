@@ -13,7 +13,8 @@ let bearDbusService = null;
 let micon = null;
 let replyPopup,replyText,icon;
 let corner = [];
-var textr = " How to use Bear can be found in the webpage.";
+var textr = " How to use Bear can be found in the detail at http://harishanand95.github.io/Bear/.\nClick the speech icon at the main panel and say \nWhat is Google?  \nWho is Bill Gates? \nHow are you? .\nAlso in terminal, you can call Bear command by giving \n \"Bear What is Google?\" \n \"Bear Who is Bill Gates?\"";
+
 let gicon=Gio.icon_new_for_string(Me.path + "/icons/5.png");
 let gicon1=Gio.icon_new_for_string(Me.path + "/icons/6.png");
 //let _imageBin = null;
