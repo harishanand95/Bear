@@ -7,9 +7,7 @@ import os
 import dbus
 import urllib
 import dbus
-# For image from wikipedia
-#from wikiapi import WikiApi
-#wiki = WikiApi()
+
 
 # USE GOOGLE SPEECH API FOR BETTER ACCURACY.
 using_google_speech_api = True
@@ -75,8 +73,7 @@ def record():
         cmd = "rec -c 1 -r 44000 -b 16 /tmp/test.flac gain +10 trim 0 10"
         subprocess.call(cmd.split())
         hello(" . : : .  Google Speech API call in progress  . : : .   ",1,"")
-    else:
-        
+    else:        
         cmd = "rec -c 1 -r 16000 -b 16 /tmp/test.wav gain +10 trim 0 10"
         subprocess.call(cmd.split())
         cmd = "sox /tmp/test.wav -n trim 0 1.5 noiseprof speech.noise-profile"
@@ -90,7 +87,7 @@ def google_voice_call():
     cmd = "cd ~/.Bear && node index.js"
     voice_to_text_json = subprocess.check_output(cmd,shell=True)
     if voice_to_text_json[0:9] == "undefined":
-        send_to_extension("Error 502 (Server Error)","Error 502 (Server Error).Google Speech API encountered a temporary error and could not complete your request. Please check if you have internet connection.","")
+        send_to_extension("Error 502 (Server Error)","Error 502 (Server Error).Google Speech API encountered a temporary error and could not complete your request. Please check if you have internet connection.To use Api.ai's speech recognition open /usr/local/bin/Bear file and change using_google_speech_api = True to False","")
         exit
     voice_to_text_json = str(voice_to_text_json[0:-1])
     voice_to_text_json = voice_to_text_json.replace("'","")
@@ -100,23 +97,6 @@ def google_voice_call():
     voice_text = voice_to_text[0]["result"][0]["alternative"][0]["transcript"]
     voice_text.encode('ascii','ignore')
     return voice_text
-
-# Function to fetch images. 
-
-def image(url,filename): 
-    from PIL import Image
-    size = 300,300
-    if url != "":
-        urllib.urlretrieve(url,filename)
-        try:
-            im = Image.open(filename)
-            im = im.resize(size,Image.ANTIALIAS)
-            im.save(filename)
-            return True
-        except IOError:
-            print "cannot do image resize for '%s' " % filename
-            return False
-
 
 # Function that calls the API.AI voice recogntion engine
 # Authorisation and Subscription key is obtained from api.ai. If you want to use your own api.ai account you can provide your keys by creating an account at api.ai.
@@ -161,14 +141,7 @@ def api_ai_call(api_ai_json_response,flag):
             reply += api_ai_json_response["result"]["parameters"]["reply"]
     else:
         reply += api_ai_json_response["result"]["fulfillment"]["speech"]
-        query = api_ai_json_response["result"]["parameters"]["q"]
-        #results = wiki.find(query)
-        #article = wiki.get_article(results[0])
-        #filename = "/tmp/0" + article.image[-4:]
-        #if image(article.image,filename):
-            #print "\n Image true"
-            #send_to_extension(query,reply,filename)
-        #else:
+        query = api_ai_json_response["result"]["parameters"]["resolvedQuery"]
         changeColor()
         send_to_extension(searched_term,reply,"")
    

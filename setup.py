@@ -16,12 +16,12 @@ def nodejs_install():
 if __name__ == '__main__':
     system = platform.linux_distribution()
     if system[0] == 'Fedora':
-        subprocess.call(["sudo", "yum","install","xclip","libxml2","python-lxml","python-dbus"])
+        subprocess.call(["sudo", "yum","install","xclip","sox","libxml2","python-lxml","python-dbus"])
         subprocess.call(["sudo", "yum","install","xdotool","libxslt"])
         
     else :
         subprocess.call(["sudo", "apt-get","install","xclip","libxml2","ffmpeg","python-lxml","python-dbus"])
-        subprocess.call(["sudo", "apt-get","install","xdotool","libxslt"])
+        subprocess.call(["sudo", "apt-get","install","xdotool","sox","libxslt"])
     
     
     nodejs_install()

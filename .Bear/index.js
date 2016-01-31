@@ -1,6 +1,6 @@
 var speech = require('google-speech-api');
 var opts = {
-  file:'/tmp/test.wav',
+  file:'/tmp/test.flac',
   key: 'AIzaSyDXbqhPK9BFbWGKzSesew1c6kNjNT9ExJ8'
 };
 
