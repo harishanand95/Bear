@@ -8,7 +8,6 @@ import dbus
 import urllib
 import dbus
 
-
 # USE GOOGLE SPEECH API FOR BETTER ACCURACY.
 using_google_speech_api = True
 
@@ -73,7 +72,7 @@ def record():
         cmd = "rec -c 1 -r 44000 -b 16 /tmp/test.flac gain +10 trim 0 10"
         subprocess.call(cmd.split())
         hello(" . : : .  Google Speech API call in progress  . : : .   ",1,"")
-    else:        
+    else:
         cmd = "rec -c 1 -r 16000 -b 16 /tmp/test.wav gain +10 trim 0 10"
         subprocess.call(cmd.split())
         cmd = "sox /tmp/test.wav -n trim 0 1.5 noiseprof speech.noise-profile"
@@ -87,7 +86,7 @@ def google_voice_call():
     cmd = "cd ~/.Bear && node index.js"
     voice_to_text_json = subprocess.check_output(cmd,shell=True)
     if voice_to_text_json[0:9] == "undefined":
-        send_to_extension("Error 502 (Server Error)","Error 502 (Server Error).Google Speech API encountered a temporary error and could not complete your request. Please check if you have internet connection.To use Api.ai's speech recognition open /usr/local/bin/Bear file and change using_google_speech_api = True to False","")
+        send_to_extension("Error 502 (Server Error)","Error 502 (Server Error).Google Speech API encountered a temporary error and could not complete your request. Please check if you have internet connection. To use Api.ai's speech recognition open /usr/local/bin/Bear file and change using_google_speech_api = True to False","")
         exit
     voice_to_text_json = str(voice_to_text_json[0:-1])
     voice_to_text_json = voice_to_text_json.replace("'","")
@@ -141,7 +140,7 @@ def api_ai_call(api_ai_json_response,flag):
             reply += api_ai_json_response["result"]["parameters"]["reply"]
     else:
         reply += api_ai_json_response["result"]["fulfillment"]["speech"]
-        query = api_ai_json_response["result"]["parameters"]["resolvedQuery"]
+        query = api_ai_json_response["result"]["resolvedQuery"]
         changeColor()
         send_to_extension(searched_term,reply,"")
    

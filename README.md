@@ -1,5 +1,7 @@
-# Bear
+### Bear
 Cortana or Siri like application (personal assistant) for Linux (Gnome 3)
+
+https://harishanand95.github.io/Bear
 
 ## Installation of Bear.
 
