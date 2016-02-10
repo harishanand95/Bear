@@ -3,12 +3,27 @@ import requests,sys,string
 import json
 import subprocess
 import textwrap
-import os
 import dbus
-import urllib
-import dbus
+import logging
+import logging.handlers
 
-# USE GOOGLE SPEECH API FOR BETTER ACCURACY.
+LOG_FILENAME = '/tmp/Bear.log'
+
+logger = logging.getLogger('all_exception_raised')
+logger.setLevel(logging.DEBUG)
+handler = logging.handlers.TimedRotatingFileHandler(LOG_FILENAME,
+                                               when="m",
+                                               interval=1,
+                                               backupCount=2,
+                                               )
+logger.addHandler(handler)
+
+def my_handler(exctype, value, tb):
+    logger.error("Uncaught exception: {0}".format(str(value)),exc_info=(exctype,value,tb))
+
+sys.excepthook = my_handler
+
+# USING GOOGLE SPEECH API FOR BETTER ACCURACY.
 using_google_speech_api = True
 
 bus = dbus.SessionBus()
@@ -20,6 +35,7 @@ voice_to_text = ""
 # Reports searches that Bear couldn't understand to Admin.
 
 def Report_to_admin(subject,content):
+    logger.info("Admin report : Report_to_admin\n")
     return requests.post(
         "https://api.mailgun.net/v3/sandbox993e74db4dc649acb4e25e2f62e1f384.mailgun.org/messages",
         auth=("api", "key-0c4b2144b9585be0660a2ff2de1647f1"),
@@ -37,17 +53,15 @@ def Report_to_admin(subject,content):
 # pop_up_content - content to be displayed as part of notification.
 
 def send_to_extension(top_title,Content,filename):
-    popup = textwrap.fill(Content,120)
-    
+    logger.info("passing values and arg to extension : send_to_extension\n")
+    popup = textwrap.fill(Content,120)    
     if(len(popup) > 60):
         #print "inside send to extension"
         reply = "\n"; 
         reply += popup;
         if filename != "":
-            print "yes filename"+str(filename)
             hello(reply+"    ",-1,filename)
         else:
-            print "no filename" +str(filename)
             hello(reply+"    ",0,"")
         call_extension()
     else:
@@ -60,6 +74,7 @@ def send_to_extension(top_title,Content,filename):
 # which creates the pop up notification.
 
 def call_extension():
+    logger.info("calling extension : call_extension\n")
     s = subprocess.check_output("xdpyinfo | grep dimensions | awk '{print $2}' | awk -Fx '{print $1, $2}'",shell=True) #screen size
     s = s.split()
     subprocess.call(["xdotool","mousemove",str(s[0]),"0"])
@@ -69,10 +84,12 @@ def call_extension():
 
 def record():
     if using_google_speech_api:
+        logger.info("Recording only started with using_google_speech_api set True : record\n")
         cmd = "rec -c 1 -r 44000 -b 16 /tmp/test.flac gain +10 trim 0 10"
         subprocess.call(cmd.split())
         hello(" . : : .  Google Speech API call in progress  . : : .   ",1,"")
     else:
+        logger.info("Recording only started with using_google_speech_api set False : record\n")
         cmd = "rec -c 1 -r 16000 -b 16 /tmp/test.wav gain +10 trim 0 10"
         subprocess.call(cmd.split())
         cmd = "sox /tmp/test.wav -n trim 0 1.5 noiseprof speech.noise-profile"
@@ -83,9 +100,12 @@ def record():
 
 # Function to send the recorded voice to Google Speech API    
 def google_voice_call():
+    logger.info("Google Speech API call in progress : google_voice_call")
     cmd = "cd ~/.Bear && node index.js"
     voice_to_text_json = subprocess.check_output(cmd,shell=True)
+    logger.debug("voice_to_text_json : %s\n" % voice_to_text_json) 
     if voice_to_text_json[0:9] == "undefined":
+        logger.debug("Error 502 (Server Error)\n")           
         send_to_extension("Error 502 (Server Error)","Error 502 (Server Error).Google Speech API encountered a temporary error and could not complete your request. Please check if you have internet connection. To use Api.ai's speech recognition open /usr/local/bin/Bear file and change using_google_speech_api = True to False","")
         exit
     voice_to_text_json = str(voice_to_text_json[0:-1])
@@ -101,8 +121,10 @@ def google_voice_call():
 # Authorisation and Subscription key is obtained from api.ai. If you want to use your own api.ai account you can provide your keys by creating an account at api.ai.
 
 def api_ai_voice_call():
+    logger.info("API.ai Speech call in progress : api_ai_voice_call\n")
     subp = subprocess.check_output(['curl','-k','-F',"request={'timezone':'America/New_York', 'lang':'en'};type=application/json", '-F',"voiceData=@/tmp/cleanedtest.wav;type=audio/wav",'-H',"Authorization: Bearer d1e8a81177b64dae88326f80c2fa73d0",'-H',"ocp-apim-subscription-key: c3f08d12-f0cb-4524-b468-1c2226857018","https://api.api.ai/v1/query?v=20150910"])
     api_ai_json_response = json.loads(subp)
+    logger.debug("api_ai_json_response : %s\n" % api_ai_json_response)
     return api_ai_json_response 
 
 # Function that calls the API.AI NLP engine
@@ -111,6 +133,7 @@ def api_ai_voice_call():
 #        False -  when api.ai voice call was done, NLP was already done.
 
 def api_ai_call(api_ai_json_response,flag):
+    logger.info("API.ai NLP call in progress with flag value set as %s : api_ai_call\n" % flag)
     hello(" . : : .  Api.ai call in progress  . : : .  ",1,"")
     if flag :
          a = ['curl','-H',"Content-Type: application/json; charset=utf-8",'-H',"Authorization: Bearer d1e8a81177b64dae88326f80c2fa73d0",'-H',"ocp-apim-subscription-key: c3f08d12-f0cb-4524-b468-1c2226857018",'--data']
@@ -125,10 +148,10 @@ def api_ai_call(api_ai_json_response,flag):
          sub_response = subprocess.check_output(a)
          api_ai_json_response = json.loads(sub_response)
     reply =""
-    print "\n api_ai_json_response : " + str(api_ai_json_response)
+    logger.debug("api_ai_json_response : %s \n" % str(api_ai_json_response))
     searched_term = api_ai_json_response["result"]["resolvedQuery"]
     searched_term = searched_term.decode('utf8')
-    print searched_term
+    logger.debug("searched_term : %s \n" % searched_term )
     changeColor()    
     hello(searched_term,1,"")
     
@@ -146,6 +169,7 @@ def api_ai_call(api_ai_json_response,flag):
    
     
 if  __name__ == '__main__' :
+    logger.info("+++ Bear log +++\n")
     if len(sys.argv) < 2:
         record()
         if using_google_speech_api:
